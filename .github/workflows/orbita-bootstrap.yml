@@ -1,0 +1,44 @@
+name: Bootstrap Orbita Source
+
+on:
+  push:
+    paths:
+      - ORBITA_PACKAGE.b64
+      - .github/workflows/orbita-bootstrap.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unpack Órbita source package
+        shell: bash
+        run: |
+          if [ ! -f ORBITA_PACKAGE.b64 ]; then
+            echo "ORBITA_PACKAGE.b64 not present; nothing to unpack."
+            exit 0
+          fi
+          base64 --decode --ignore-garbage ORBITA_PACKAGE.b64 > orbita.zip
+          unzip -q orbita.zip -d unpacked
+          cp -R unpacked/ORBITA_RAILWAY_V1/. .
+          rm -rf unpacked orbita.zip ORBITA_PACKAGE.b64
+
+      - name: Commit unpacked app source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+            exit 0
+          fi
+          git commit -m "Add Órbita source files"
+          git push
