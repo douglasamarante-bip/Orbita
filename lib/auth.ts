@@ -1,0 +1,9 @@
+import {randomBytes,createHash,scryptSync,timingSafeEqual} from 'node:crypto';
+import {sqlite} from './storage';
+export const sha=(s:string)=>createHash('sha256').update(s).digest('hex');
+export function sessionUser(req:Request){const cookie=req.headers.get('cookie')||'';const token=cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('orbita_session='))?.slice(15);if(!token)return null;return sqlite().prepare('SELECT u.id,u.email,u.role FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token_hash=? AND s.expires>?').get(sha(token),Date.now()) as {id:string,email:string,role:string}|undefined}
+export function hashPassword(password:string){const salt=randomBytes(16).toString('hex');return salt+':'+scryptSync(password,salt,64).toString('hex')}
+export function checkPassword(password:string,value:string){const [salt,hash]=value.split(':');if(!salt||!hash)return false;const expected=Buffer.from(hash,'hex'),supplied=scryptSync(password,salt,64);return supplied.length===expected.length&&timingSafeEqual(supplied,expected)}
+export function newSession(userId:string){const token=randomBytes(32).toString('hex');sqlite().prepare('INSERT INTO sessions(token_hash,user_id,expires) VALUES(?,?,?)').run(sha(token),userId,Date.now()+14*86400000);return token}
+export function sessionCookie(token:string,remove=false){return `orbita_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${remove?0:14*86400}${process.env.NODE_ENV==='production'?'; Secure':''}`}
+export function rateLimit(key:string){const d=sqlite();d.prepare('DELETE FROM auth_limits WHERE until<?').run(Date.now());d.prepare('INSERT INTO auth_limits(key,count,until) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1').run(key,Date.now()+15*60000);return (d.prepare('SELECT count FROM auth_limits WHERE key=?').get(key) as any).count<=15}
