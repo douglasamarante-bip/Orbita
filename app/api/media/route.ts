@@ -67,12 +67,11 @@ export const POST = respond(async req => {
         fail('O arquivo enviado não corresponde aos dados informados.', 409);
       }
 
-      try {
-        await db().prepare('INSERT INTO assets(id,brand_id,name,type,size,share_key) VALUES(?,?,?,?,?,?)')
-          .bind(id, brandId, name, type, size, uid()).run();
-      } catch (error) {
-        await supabaseStorage().remove([id]);
-        throw error;
+      await db().prepare('INSERT INTO assets(id,brand_id,name,type,size,share_key) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
+        .bind(id, brandId, name, type, size, uid()).run();
+      const saved = await db().prepare('SELECT brand_id,type,size FROM assets WHERE id=?').bind(id).first<any>();
+      if (!saved || saved.brand_id !== brandId || saved.type !== type || Number(saved.size) !== size) {
+        fail('Esta mídia já está vinculada a outro arquivo ou cliente.', 409);
       }
 
       return Response.json({ id, type });
@@ -125,16 +124,14 @@ export const GET = respond(async req => {
 
   if (hasSupabaseStorage()) {
     const download = url.searchParams.get('download') === '1';
-    const result = await supabaseStorage().createSignedUrl(
-      asset.id,
-      4 * 60 * 60,
-      download ? { download: asset.name } : {},
-    );
+    const result = await supabaseStorage().createSignedUrl(asset.id, 4 * 60 * 60);
     if (result.error || !result.data) fail('Não foi possível abrir a mídia.', 502);
+    const signedUrl = new URL(result.data.signedUrl);
+    if (download) signedUrl.searchParams.set('download', asset.name);
     return new Response(null, {
       status: 302,
       headers: {
-        Location: result.data.signedUrl,
+        Location: signedUrl.toString(),
         'Cache-Control': 'private, no-store',
       },
     });
