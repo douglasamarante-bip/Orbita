@@ -10,6 +10,14 @@ function validateFile(name: string, type: string, size: number) {
   if (!Number.isFinite(size) || size <= 0 || size > maxSize) fail('Tamanho máximo: 50 MB.');
 }
 
+function resumableEndpoint() {
+  const url = new URL(process.env.SUPABASE_URL!);
+  const host = url.hostname.endsWith('.supabase.co')
+    ? url.hostname.split('.')[0] + '.storage.supabase.co'
+    : url.hostname;
+  return url.protocol + '//' + host + (url.port ? ':' + url.port : '') + '/storage/v1/upload/resumable';
+}
+
 export const POST = respond(async req => {
   sameOrigin(req);
   const contentType = req.headers.get('content-type') || '';
@@ -35,7 +43,12 @@ export const POST = respond(async req => {
       const result = await supabaseStorage().createSignedUploadUrl(id, { upsert: false });
       if (result.error || !result.data) fail(result.error?.message || 'Não foi possível preparar o upload.', 502);
 
-      return Response.json({ direct: true, id, uploadUrl: result.data.signedUrl });
+      return Response.json({
+        direct: true,
+        id,
+        token: result.data.token,
+        endpoint: resumableEndpoint(),
+      });
     }
 
     if (value.action === 'complete') {

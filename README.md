@@ -21,7 +21,7 @@ O projeto mantém SQLite e arquivos locais como fallback de desenvolvimento. Em 
 5. Em **Project configuration → Environment variables**, configure as variáveis abaixo. Para DATABASE_URL, habilite os escopos **Builds** e **Functions**. Para SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY, habilite **Functions**.
 6. Publique o site. A primeira compilação cria as tabelas PostgreSQL e o bucket privado orbita-media automaticamente.
 
-O upload de imagens e vídeos é feito diretamente do navegador para o Supabase Storage por URL assinada. O limite configurado é 50 MB; a chave service role nunca é enviada ao navegador.
+O upload de imagens e vídeos é feito diretamente do navegador para o Supabase Storage por URL assinada. Vídeos usam TUS resumível em blocos de 6 MB, com tentativas automáticas e retomada após interrupções. O limite configurado é 50 MB; a chave service role nunca é enviada ao navegador.
 
 Não use output standalone nem exportação estática: o Órbita precisa das rotas de API e da autenticação no servidor.
 
