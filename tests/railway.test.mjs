@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import ts from 'typescript';
 const temp=fs.mkdtempSync(path.join(os.tmpdir(),'orbita-test-'));process.env.DATA_DIR=path.join(temp,'data');process.env.MIGRATIONS_DIR=path.resolve('drizzle');process.env.SETUP_TOKEN='a-test-only-setup-token';process.env.APP_ORIGIN='https://orbita.test';
 const mod=path.join(temp,'modules');fs.mkdirSync(mod);
-for(const name of ['storage','auth','server','integrations'])compile('lib/'+name+'.ts',name);
+for(const name of ['storage','auth','server','integrations','scheduler'])compile('lib/'+name+'.ts',name);
 for(const name of ['auth','brands','posts','workspace','invites','media'])compile('app/api/'+name+'/route.ts','route-'+name);compile('app/api/jobs/route.ts','route-jobs');
 function compile(source,name){const input=fs.readFileSync(source,'utf8').replace(/'@\/lib\/(\w+)'/g,"'./$1.mjs'").replace(/'\.\/(storage|auth|server)'/g,"'./$1.mjs'");fs.writeFileSync(path.join(mod,name+'.mjs'),ts.transpileModule(input,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText)}
 const modules={};for(const name of ['auth','brands','posts','workspace','invites','media'])modules[name]=await import('file://'+path.join(mod,'route-'+name+'.mjs'));modules.jobs=await import('file://'+path.join(mod,'route-jobs.mjs'));const server=await import('file://'+path.join(mod,'server.mjs'));

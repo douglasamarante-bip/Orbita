@@ -75,7 +75,7 @@ export const PATCH=respond(async req=>{
 
   const history=JSON.parse(p.history);
   history.push({action:label,actor:a.user.email,at:new Date().toISOString(),...(comment?{comment}:{})});
-  const r=await db().prepare('UPDATE posts SET status=?,feedback=?,history=?,revision=?,title=?,caption=?,platform=?,format=?,media=?,scheduled_at=?,poll_question=?,poll_option_a=?,poll_option_b=?,error=CASE WHEN ? THEN NULL ELSE error END WHERE id=? AND revision=? AND status=?').bind(status,feedback,JSON.stringify(history),revision,vals?.title??p.title,vals?.caption??p.caption,vals?.platform??p.platform,vals?.format??p.format,vals?.media?JSON.stringify(vals.media):p.media,vals?.scheduled_at?new Date(vals.scheduled_at).toISOString():p.scheduled_at,vals?.poll_question??p.poll_question??null,vals?.poll_option_a??p.poll_option_a??null,vals?.poll_option_b??p.poll_option_b??null,clearError?1:0,p.id,p.revision,p.status).run();
+  const r=await db().prepare('UPDATE posts SET status=?,feedback=?,history=?,revision=?,title=?,caption=?,platform=?,format=?,media=?,scheduled_at=?,poll_question=?,poll_option_a=?,poll_option_b=?,error=CASE WHEN ? THEN NULL ELSE error END WHERE id=? AND revision=? AND status=?').bind(status,feedback,JSON.stringify(history),revision,vals?.title??p.title,vals?.caption??p.caption,vals?.platform??p.platform,vals?.format??p.format,vals?.media?JSON.stringify(vals.media):p.media,vals?.scheduled_at?new Date(vals.scheduled_at).toISOString():p.scheduled_at,vals?.poll_question??p.poll_question??null,vals?.poll_option_a??p.poll_option_a??null,vals?.poll_option_b??p.poll_option_b??null,clearError,p.id,p.revision,p.status).run();
   if(!r.meta.changes)fail('Outra pessoa atualizou a publicação. Recarregue.',409);
   return Response.json({ok:true});
 });
