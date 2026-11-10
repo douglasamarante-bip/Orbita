@@ -2,13 +2,36 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, readFileSync, readdirSync, existsSync, writeFileSync, renameSync, unlinkSync, createReadStream, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { getStore } from '@netlify/blobs';
+import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
 
 const { Pool } = pg as any;
 const root = process.env.DATA_DIR || join(process.cwd(), '.data');
 let database: DatabaseSync | undefined;
 let postgresPool: any;
+let supabaseClient: any;
+
+export function hasSupabaseStorage() {
+  return Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
+export function isNetlifyRuntime() {
+  return process.env.NETLIFY === 'true' || Boolean(process.env.NETLIFY_SITE_ID);
+}
+
+export function supabaseStorage() {
+  if (!hasSupabaseStorage()) {
+    throw new Error('Configure SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.');
+  }
+  if (!supabaseClient) {
+    supabaseClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
+    );
+  }
+  return supabaseClient.storage.from('orbita-media');
+}
 
 function getPostgresPool() {
   if (!process.env.DATABASE_URL) throw new Error('Configure DATABASE_URL para usar o banco PostgreSQL.');
@@ -168,31 +191,8 @@ export function nodeBucket() {
     if (!/^[a-zA-Z0-9_-]+$/.test(key)) throw new Error('Invalid media key');
     return key;
   };
-  const isNetlify = process.env.NETLIFY === 'true' || Boolean(process.env.NETLIFY_SITE_ID);
-
-  if (isNetlify) {
-    const store = getStore('orbita-media');
-    return {
-      async put(key: string, bytes: ArrayBuffer, options?: any) {
-        validKey(key);
-        await store.set(key, bytes, {
-          metadata: { contentType: options?.httpMetadata?.contentType || 'application/octet-stream' },
-        });
-        return { key };
-      },
-      async get(key: string) {
-        validKey(key);
-        const body = await store.get(key, { type: 'stream', consistency: 'strong' });
-        return body ? { body, size: 0 } : null;
-      },
-      async delete(key: string) {
-        validKey(key);
-        await store.delete(key);
-      },
-    };
-  }
-
   const path = (key: string) => join(root, 'uploads', validKey(key));
+
   return {
     async put(key: string, bytes: ArrayBuffer) {
       mkdirSync(join(root, 'uploads'), { recursive: true });

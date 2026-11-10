@@ -120,3 +120,18 @@ CREATE TABLE IF NOT EXISTS scheduler_locks (
   token TEXT NOT NULL,
   expires_at BIGINT NOT NULL
 );
+
+
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'orbita-media',
+  'orbita-media',
+  false,
+  52428800,
+  ARRAY['image/jpeg', 'image/png', 'video/mp4']::text[]
+)
+ON CONFLICT (id) DO UPDATE SET
+  name = EXCLUDED.name,
+  public = false,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;

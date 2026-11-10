@@ -6,11 +6,11 @@ Aplicativo para agências e clientes: calendário, publicações, aprovação, h
 
 - **Netlify + Next.js:** interface, SSR e rotas de API.
 - **Supabase PostgreSQL:** banco persistente.
-- **Netlify Blobs:** armazenamento persistente das mídias.
+- **Supabase Storage:** bucket privado para mídias, com upload direto por URL assinada.
 - **Netlify Scheduled Functions:** disparo do agendador a cada minuto.
 - **GitHub:** código-fonte e deploy contínuo.
 
-O projeto mantém SQLite e arquivos locais como fallback de desenvolvimento. Em produção no Netlify, configure DATABASE_URL; o banco PostgreSQL e Netlify Blobs serão usados automaticamente.
+O projeto mantém SQLite e arquivos locais como fallback de desenvolvimento. Em produção no Netlify, configure DATABASE_URL, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY. O PostgreSQL guarda os dados e o Supabase Storage guarda as mídias.
 
 ## Publicar pelo GitHub
 
@@ -18,8 +18,10 @@ O projeto mantém SQLite e arquivos locais como fallback de desenvolvimento. Em 
 2. No Supabase, abra **Connect** e copie a connection string do **Transaction Pooler**. Use essa URL em DATABASE_URL no Netlify. Mantenha SSL habilitado.
 3. No Netlify, importe o repositório douglasamarante-bip/Orbita e selecione a branch de produção que você decidiu publicar.
 4. O arquivo netlify.toml já define o build e a pasta de publicação. O comando de build executa as migrações do banco antes do Next.js.
-5. Em **Project configuration → Environment variables**, configure as variáveis abaixo. Para DATABASE_URL, habilite os escopos **Builds** e **Functions**.
-6. Publique o site. A primeira compilação cria as tabelas PostgreSQL automaticamente.
+5. Em **Project configuration → Environment variables**, configure as variáveis abaixo. Para DATABASE_URL, habilite os escopos **Builds** e **Functions**. Para SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY, habilite **Functions**.
+6. Publique o site. A primeira compilação cria as tabelas PostgreSQL e o bucket privado orbita-media automaticamente.
+
+O upload de imagens e vídeos é feito diretamente do navegador para o Supabase Storage por URL assinada. O limite configurado é 50 MB; a chave service role nunca é enviada ao navegador.
 
 Não use output standalone nem exportação estática: o Órbita precisa das rotas de API e da autenticação no servidor.
 
@@ -29,6 +31,8 @@ Não use output standalone nem exportação estática: o Órbita precisa das rot
 |---|---:|---|
 | APP_ORIGIN | Sim | URL pública completa, sem barra no final |
 | DATABASE_URL | Sim | Connection string do Supabase Transaction Pooler |
+| SUPABASE_URL | Sim | URL do mesmo projeto Supabase |
+| SUPABASE_SERVICE_ROLE_KEY | Sim | Chave secreta usada apenas pelas funções do servidor |
 | DATABASE_SSL | Não | true por padrão |
 | DATABASE_POOL_MAX | Não | Conexões simultâneas; padrão 1 |
 | TOKEN_ENCRYPTION_KEY | Sim | Criptografia dos tokens das integrações |
