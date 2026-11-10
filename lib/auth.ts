@@ -13,7 +13,7 @@ export async function sessionUser(req: Request) {
   return await nodeDb()
     .prepare('SELECT u.id,u.email,u.role FROM users u JOIN sessions s ON s.user_id=u.id WHERE s.token_hash=? AND s.expires>?')
     .bind(sha(token), Date.now())
-    .first<{ id: string; email: string; role: string }>();
+    .first() as { id: string; email: string; role: string } | null;
 }
 
 export function hashPassword(password: string) {
@@ -46,6 +46,6 @@ export async function rateLimit(key: string) {
   await d.prepare('DELETE FROM auth_limits WHERE until<?').bind(Date.now()).run();
   await d.prepare('INSERT INTO auth_limits(key,count,until) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=auth_limits.count+1,until=excluded.until')
     .bind(key, Date.now() + 15 * 60000).run();
-  const row = await d.prepare('SELECT count FROM auth_limits WHERE key=?').bind(key).first<{ count: number }>();
+  const row: any = await d.prepare('SELECT count FROM auth_limits WHERE key=?').bind(key).first();
   return Number(row?.count || 0) <= 15;
 }
