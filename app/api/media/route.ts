@@ -105,7 +105,7 @@ export const POST = respond(async req => {
   if (isNetlifyRuntime()) fail('Configure o Supabase Storage para enviar mídias no Netlify.', 503);
 
   const id = uid();
-  await bucket().put(id, await file.arrayBuffer(), { httpMetadata: { contentType: file.type } });
+  await bucket().put(id, await file.arrayBuffer());
   await db().prepare('INSERT INTO assets(id,brand_id,name,type,size,share_key) VALUES(?,?,?,?,?,?)')
     .bind(id, brandId, file.name, file.type, file.size, uid()).run();
   return Response.json({ id, type: file.type });
