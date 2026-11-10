@@ -29,7 +29,7 @@ export const POST = respond(async req => {
       sha(String(value.setupToken)) === sha(process.env.SETUP_TOKEN));
 
     try {
-      user = await db().transaction(async tx => {
+      user = await db().transaction(async (tx: any) => {
         let role = 'client';
         if (setupValid) {
           const agency = await tx.prepare("SELECT id FROM users WHERE role='agency'").first();

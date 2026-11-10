@@ -69,7 +69,7 @@ export const POST = respond(async req => {
 
       await db().prepare('INSERT INTO assets(id,brand_id,name,type,size,share_key) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
         .bind(id, brandId, name, type, size, uid()).run();
-      const saved = await db().prepare('SELECT brand_id,type,size FROM assets WHERE id=?').bind(id).first<any>();
+      const saved: any = await db().prepare('SELECT brand_id,type,size FROM assets WHERE id=?').bind(id).first();
       if (!saved || saved.brand_id !== brandId || saved.type !== type || Number(saved.size) !== size) {
         fail('Esta mídia já está vinculada a outro arquivo ou cliente.', 409);
       }
