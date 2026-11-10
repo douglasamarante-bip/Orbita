@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import ts from 'typescript';
-const temp=fs.mkdtempSync(path.join(os.tmpdir(),'orbita-test-'));process.env.DATA_DIR=path.join(temp,'data');process.env.MIGRATIONS_DIR=path.resolve('drizzle');process.env.SETUP_TOKEN='a-test-only-setup-token';process.env.APP_ORIGIN='https://orbita.test';
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'orbita-test-'));fs.symlinkSync(path.resolve('node_modules'),path.join(temp,'node_modules'),process.platform==='win32'?'junction':'dir');process.env.DATA_DIR=path.join(temp,'data');process.env.MIGRATIONS_DIR=path.resolve('drizzle');process.env.SETUP_TOKEN='a-test-only-setup-token';process.env.APP_ORIGIN='https://orbita.test';
 const mod=path.join(temp,'modules');fs.mkdirSync(mod);
 for(const name of ['storage','auth','server','integrations','scheduler'])compile('lib/'+name+'.ts',name);
 for(const name of ['auth','brands','posts','workspace','invites','media'])compile('app/api/'+name+'/route.ts','route-'+name);compile('app/api/jobs/route.ts','route-jobs');
