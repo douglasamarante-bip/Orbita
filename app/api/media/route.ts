@@ -150,7 +150,7 @@ export const GET = respond(async req => {
     'X-Content-Type-Options': 'nosniff',
   };
   if (url.searchParams.get('download') === '1') {
-    headers['Content-Disposition'] = \`attachment; filename*=UTF-8''\${encodeURIComponent(asset.name)}\`;
+    headers['Content-Disposition'] = "attachment; filename*=UTF-8''" + encodeURIComponent(asset.name);
   }
   return new Response(file.body, { headers });
 });
