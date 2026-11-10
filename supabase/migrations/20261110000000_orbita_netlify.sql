@@ -122,6 +122,32 @@ CREATE TABLE IF NOT EXISTS scheduler_locks (
 );
 
 
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.connections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.oauth ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.auth_limits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.scheduler_locks ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE
+  public.users,
+  public.brands,
+  public.assets,
+  public.posts,
+  public.connections,
+  public.oauth,
+  public.metrics,
+  public.sessions,
+  public.invitations,
+  public.auth_limits,
+  public.scheduler_locks
+FROM anon, authenticated;
+
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'orbita-media',
