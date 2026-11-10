@@ -33,7 +33,6 @@ function toPostgres(sql: string) {
 
   for (let i = 0; i < sql.length; i++) {
     const char = sql[i];
-
     if (char === "'" && !double) {
       output += char;
       if (single && sql[i + 1] === "'") {
@@ -43,7 +42,6 @@ function toPostgres(sql: string) {
       single = !single;
       continue;
     }
-
     if (char === '"' && !single) {
       output += char;
       if (double && sql[i + 1] === '"') {
@@ -53,27 +51,22 @@ function toPostgres(sql: string) {
       double = !double;
       continue;
     }
-
     if (char === '?' && !single && !double) {
       output += '$' + (++index);
       continue;
     }
-
     output += char;
   }
-
   return output;
 }
 
 export function sqlite() {
   if (database) return database;
-
   mkdirSync(root, { recursive: true });
   const d = new DatabaseSync(join(root, 'orbita.sqlite'));
   d.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
   d.exec('CREATE TABLE IF NOT EXISTS _migrations (name TEXT PRIMARY KEY)');
   const folder = process.env.MIGRATIONS_DIR || join(process.cwd(), 'drizzle');
-
   if (!existsSync(folder)) throw new Error('Migration directory missing');
 
   for (const name of readdirSync(folder).filter(n => n.endsWith('.sql')).sort()) {
@@ -88,7 +81,6 @@ export function sqlite() {
       throw error;
     }
   }
-
   database = d;
   return d;
 }
@@ -105,21 +97,14 @@ function sqliteDb(connection: DatabaseSync = sqlite()): any {
         },
         async run() {
           const result = connection.prepare(query).run(...values);
-          return {
-            meta: {
-              changes: Number(result.changes),
-              last_row_id: Number(result.lastInsertRowid),
-            },
-          };
+          return { meta: { changes: Number(result.changes), last_row_id: Number(result.lastInsertRowid) } };
         },
         bind(...next: any[]) {
           return bound(next);
         },
       });
-
       return bound();
     },
-
     async transaction<T>(fn: (tx: any) => Promise<T>): Promise<T> {
       const current = sqlite();
       current.exec('BEGIN IMMEDIATE');
@@ -149,21 +134,14 @@ function postgresDb(executor: any = getPostgresPool()): any {
         },
         async run() {
           const result = await executor.query(toPostgres(query), values);
-          return {
-            meta: {
-              changes: Number(result.rowCount || 0),
-              last_row_id: null,
-            },
-          };
+          return { meta: { changes: Number(result.rowCount || 0), last_row_id: null } };
         },
         bind(...next: any[]) {
           return bound(next);
         },
       });
-
       return bound();
     },
-
     async transaction<T>(fn: (tx: any) => Promise<T>): Promise<T> {
       const client = await getPostgresPool().connect();
       try {
@@ -190,11 +168,10 @@ export function nodeBucket() {
     if (!/^[a-zA-Z0-9_-]+$/.test(key)) throw new Error('Invalid media key');
     return key;
   };
-
   const isNetlify = process.env.NETLIFY === 'true' || Boolean(process.env.NETLIFY_SITE_ID);
 
   if (isNetlify) {
-    const store = getStore({ name: 'orbita-media', consistency: 'strong' });
+    const store = getStore('orbita-media');
     return {
       async put(key: string, bytes: ArrayBuffer, options?: any) {
         validKey(key);
@@ -217,7 +194,7 @@ export function nodeBucket() {
 
   const path = (key: string) => join(root, 'uploads', validKey(key));
   return {
-    async put(key: string, bytes: ArrayBuffer, options?: any) {
+    async put(key: string, bytes: ArrayBuffer) {
       mkdirSync(join(root, 'uploads'), { recursive: true });
       const file = path(key);
       const tmp = file + '.tmp';
@@ -228,10 +205,7 @@ export function nodeBucket() {
     async get(key: string) {
       const file = path(key);
       if (!existsSync(file)) return null;
-      return {
-        body: Readable.toWeb(createReadStream(file)) as ReadableStream<Uint8Array>,
-        size: statSync(file).size,
-      };
+      return { body: Readable.toWeb(createReadStream(file)) as ReadableStream<Uint8Array>, size: statSync(file).size };
     },
     async delete(key: string) {
       const file = path(key);

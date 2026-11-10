@@ -5,12 +5,9 @@ export const sha = (value: string) => createHash('sha256').update(value).digest(
 
 export async function sessionUser(req: Request) {
   const cookie = req.headers.get('cookie') || '';
-  const token = cookie
-    .split(';')
-    .map(value => value.trim())
+  const token = cookie.split(';').map(value => value.trim())
     .find(value => value.startsWith('orbita_session='))
     ?.slice('orbita_session='.length);
-
   if (!token) return null;
 
   return await nodeDb()
@@ -34,25 +31,21 @@ export function checkPassword(password: string, value: string) {
 
 export async function newSession(userId: string) {
   const token = randomBytes(32).toString('hex');
-  await nodeDb()
-    .prepare('INSERT INTO sessions(token_hash,user_id,expires) VALUES(?,?,?)')
-    .bind(sha(token), userId, Date.now() + 14 * 86400000)
-    .run();
+  await nodeDb().prepare('INSERT INTO sessions(token_hash,user_id,expires) VALUES(?,?,?)')
+    .bind(sha(token), userId, Date.now() + 14 * 86400000).run();
   return token;
 }
 
 export function sessionCookie(token: string, remove = false) {
-  return 'orbita_session=' + token +
-    '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + (remove ? 0 : 14 * 86400) +
-    (process.env.NODE_ENV === 'production' ? '; Secure' : '');
+  return 'orbita_session=' + token + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' +
+    (remove ? 0 : 14 * 86400) + (process.env.NODE_ENV === 'production' ? '; Secure' : '');
 }
 
 export async function rateLimit(key: string) {
   const d = nodeDb();
   await d.prepare('DELETE FROM auth_limits WHERE until<?').bind(Date.now()).run();
   await d.prepare('INSERT INTO auth_limits(key,count,until) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET count=auth_limits.count+1,until=excluded.until')
-    .bind(key, Date.now() + 15 * 60000)
-    .run();
+    .bind(key, Date.now() + 15 * 60000).run();
   const row = await d.prepare('SELECT count FROM auth_limits WHERE key=?').bind(key).first<{ count: number }>();
   return Number(row?.count || 0) <= 15;
 }

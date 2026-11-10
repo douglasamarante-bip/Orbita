@@ -1,0 +1,33 @@
+name: Orbita CI
+
+on:
+  push:
+    branches:
+      - main
+      - netlify-deploy
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile --shamefully-hoist
+      - name: Run tests
+        run: pnpm test
+      - name: Build Next.js
+        run: pnpm build

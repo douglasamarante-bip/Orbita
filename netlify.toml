@@ -1,0 +1,10 @@
+[build]
+  command = "pnpm run db:migrate && pnpm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "24"
+  PNPM_FLAGS = "--shamefully-hoist --no-frozen-lockfile"
+
+[functions]
+  node_bundler = "esbuild"
