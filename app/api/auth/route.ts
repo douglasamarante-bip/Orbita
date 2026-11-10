@@ -17,7 +17,7 @@ export const POST = respond(async req => {
 
   const email = String(value.email || '').trim().toLowerCase();
   const password = String(value.password || '');
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || password.length < 10 || password.length > 200) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10 || password.length > 200) {
     fail('Use um e-mail válido e uma senha de 10 a 200 caracteres.');
   }
   if (!(await rateLimit('auth:' + email))) fail('Muitas tentativas. Aguarde 15 minutos.', 429);
