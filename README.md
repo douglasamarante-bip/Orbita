@@ -1,42 +1,106 @@
-# Órbita — Railway
+# Órbita — Netlify
 
-Aplicativo web para agências e clientes: calendário, publicações, aprovação, histórico, dashboard e integrações Meta/Google.
+Aplicativo para agências e clientes: calendário, publicações, aprovação, histórico, dashboard e integrações Meta/Instagram/Google.
 
-## Estado desta entrega
+## Arquitetura de produção
 
-- Portado de Workers para Next.js/Node 24, com Dockerfile próprio.
-- Build de produção e oito testes de autenticação, permissões, aprovação e armazenamento passaram.
-- Projeto Railway criado: orbita, ID 8209a05a-37f8-4722-9fca-014017cd5bca.
-- Ambiente production: 1be9f495-22c8-4931-8ced-ae18e4145254.
-- O código ainda NÃO foi publicado no Railway. Falta conectar o repositório GitHub de origem.
-- Dados da hospedagem anterior NÃO foram migrados. Não exclua a versão anterior caso já tenha cadastrado conteúdo nela.
+- **Netlify + Next.js:** interface, SSR e rotas de API.
+- **Supabase PostgreSQL:** banco persistente.
+- **Supabase Storage:** bucket privado para mídias, com upload direto por URL assinada.
+- **Netlify Scheduled Functions:** disparo do agendador a cada minuto.
+- **GitHub:** código-fonte e deploy contínuo.
 
-## Publicar
+O projeto mantém SQLite e arquivos locais como fallback de desenvolvimento. Em produção no Netlify, configure DATABASE_URL, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY. O PostgreSQL guarda os dados e o Supabase Storage guarda as mídias.
 
-1. Envie os arquivos deste diretório para um repositório GitHub conectado ao Railway.
-2. No projeto orbita, crie um serviço usando esse repositório. O Dockerfile está na raiz.
-3. Adicione um volume persistente ao serviço, montado em `/data`. Use uma réplica: SQLite e os arquivos ficam nesse volume.
-4. Gere o domínio do serviço e configure `APP_ORIGIN=https://dominio.up.railway.app`.
-5. Configure `TOKEN_ENCRYPTION_KEY`, `SETUP_TOKEN` e `SCHEDULER_SECRET` com três segredos aleatórios diferentes. Cada um pode ser gerado com `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`.
-6. Configure `DATA_DIR=/data`, `MIGRATIONS_DIR=/app/drizzle`, `SCHEDULER_ENABLED=true`, `MEDIA_DELIVERY_ENABLED=true` e `META_GRAPH_VERSION=v25.0`.
-7. Publique. O healthcheck é `/api/health`.
-8. Abra `https://dominio.up.railway.app/entrar?setup=VALOR_DO_SETUP_TOKEN` e crie a conta da agência. O token só cria o primeiro administrador. Remova SETUP_TOKEN após configurar.
-9. Cadastre marcas com o e-mail do cliente. O botão Copiar convite gera um convite individual válido por sete dias. Compartilhe-o diretamente com o respectivo cliente.
+## Publicar pelo GitHub
 
-## Integrações
+1. Crie um projeto PostgreSQL no Supabase. Use um projeto dedicado ao Órbita.
+2. No Supabase, abra **Connect** e copie a connection string do **Transaction Pooler**. Use essa URL em DATABASE_URL no Netlify. Mantenha SSL habilitado.
+3. No Netlify, importe o repositório douglasamarante-bip/Orbita e selecione a branch de produção que você decidiu publicar.
+4. O arquivo netlify.toml já define o build e a pasta de publicação. O comando de build executa as migrações do banco antes do Next.js.
+5. Em **Project configuration → Environment variables**, configure as variáveis abaixo. Para DATABASE_URL, habilite os escopos **Builds** e **Functions**. Para SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY, habilite **Functions**.
+6. Publique o site. A primeira compilação cria as tabelas PostgreSQL e o bucket privado orbita-media automaticamente.
 
-Cadastre as credenciais `META_APP_ID`, `META_APP_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`. Redirecionamentos OAuth:
-- `APP_ORIGIN/api/oauth/meta`
-- `APP_ORIGIN/api/oauth/google`
+O upload de imagens e vídeos é feito diretamente do navegador para o Supabase Storage por URL assinada. Vídeos usam TUS resumível em blocos de 6 MB, com tentativas automáticas e retomada após interrupções. O limite configurado é 50 MB; a chave service role nunca é enviada ao navegador.
 
-A autorização e as permissões dos provedores precisam ser concluídas e testadas com contas reais. Essas credenciais não acompanham o pacote.
-O agendador interno consulta a fila a cada 30 segundos. Não depende de uma aba aberta. Falhas de publicação ambíguas exigem conferência na rede social antes de repetir, para evitar posts duplicados.
-As mídias continuam protegidas para usuários; as URLs de leitura usadas pela Meta contêm uma chave individual. Não compartilhe essas URLs fora do fluxo de publicação.
-Google Agenda: sincronização manual, unidirecional, para uma agenda exclusiva. Métricas: sincronização manual; crescimento de seguidores representa variação líquida desde as coletas disponíveis, sem histórico inventado.
+Não use output standalone nem exportação estática: o Órbita precisa das rotas de API e da autenticação no servidor.
 
-## Desenvolvimento
+## Variáveis do Netlify
 
-Node 24. Use `corepack enable`, `pnpm install --frozen-lockfile`, `pnpm dev`.
-Configure as variáveis em `.env.local`; para desenvolvimento, `DATA_DIR` pode ser uma pasta local e `MIGRATIONS_DIR` o caminho absoluto para `drizzle`.
-Validação: `pnpm test`, `pnpm build`.
-O banco recebe migrações numeradas, uma vez por arquivo. Não altere migrações já aplicadas.
+| Variável | Obrigatória | Uso |
+|---|---:|---|
+| APP_ORIGIN | Sim | URL pública completa, sem barra no final |
+| DATABASE_URL | Sim | Connection string do Supabase Transaction Pooler |
+| SUPABASE_URL | Sim | URL do mesmo projeto Supabase |
+| SUPABASE_SERVICE_ROLE_KEY | Sim | Chave secreta usada apenas pelas funções do servidor |
+| DATABASE_SSL | Não | true por padrão |
+| DATABASE_POOL_MAX | Não | Conexões simultâneas; padrão 1 |
+| TOKEN_ENCRYPTION_KEY | Sim | Criptografia dos tokens das integrações |
+| SETUP_TOKEN | Inicialmente | Criação do primeiro administrador |
+| SCHEDULER_SECRET | Sim | Protege o agendador |
+| SCHEDULER_ENABLED | Sim | Use true |
+| MEDIA_DELIVERY_ENABLED | Sim | Use true |
+| META_GRAPH_VERSION | Sim | v25.0 |
+| META_APP_ID | Para Meta | ID do aplicativo Meta |
+| META_APP_SECRET | Para Meta | Segredo do aplicativo Meta |
+| INSTAGRAM_APP_ID | Opcional | ID separado para Instagram Login direto |
+| INSTAGRAM_APP_SECRET | Opcional | Segredo separado para Instagram Login direto |
+| GOOGLE_CLIENT_ID | Opcional | OAuth do Google Agenda |
+| GOOGLE_CLIENT_SECRET | Opcional | OAuth do Google Agenda |
+
+Gere três segredos diferentes para TOKEN_ENCRYPTION_KEY, SETUP_TOKEN e SCHEDULER_SECRET, por exemplo:
+
+~~~bash
+node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
+~~~
+
+Não coloque esses valores no GitHub. Cadastre-os somente nas variáveis de ambiente do Netlify.
+
+## Primeiro acesso
+
+Depois do primeiro deploy:
+
+1. Acesse APP_ORIGIN/entrar?setup=SEU_SETUP_TOKEN.
+2. Crie a conta da agência com e-mail e senha.
+3. Remova SETUP_TOKEN das variáveis do Netlify e faça um novo deploy.
+
+O token de configuração só permite criar o primeiro administrador. Os clientes continuam entrando por convites individuais.
+
+## OAuth e Instagram
+
+Cadastre exatamente estas URLs de callback nos respectivos painéis:
+
+- Instagram Login direto: APP_ORIGIN/api/oauth/instagram
+- Meta / Facebook Pages: APP_ORIGIN/api/oauth/meta
+- Google Agenda: APP_ORIGIN/api/oauth/google
+
+O fluxo de **Instagram Login direto** foi preservado; ele não exige que o cliente conecte uma Página do Facebook. O fluxo Meta continua disponível para formatos e permissões que dependem de uma Página vinculada.
+
+Se usar domínio próprio, atualize APP_ORIGIN e as URLs de callback para o mesmo domínio.
+
+## Agendamentos
+
+O Netlify executa orbita-scheduler a cada minuto. Essa função dispara orbita-publish-background, que processa a fila sem depender de uma aba aberta. O banco possui um bloqueio para evitar que dois ciclos publiquem a mesma fila simultaneamente.
+
+As Scheduled Functions rodam em deploys publicados. A execução em segundo plano usa o recurso Background Functions do Netlify, disponível nos planos com cobrança por créditos. Se sua conta estiver em um plano legado sem Background Functions, será necessário usar um serviço de cron externo para chamar POST /api/jobs com o cabeçalho Authorization: Bearer SEU_SCHEDULER_SECRET.
+
+## Desenvolvimento local
+
+Com Node.js 24 e pnpm:
+
+~~~bash
+corepack enable
+pnpm install
+pnpm dev
+~~~
+
+Sem DATABASE_URL, o desenvolvimento usa SQLite em .data e uploads no disco local. Para executar os testes:
+
+~~~bash
+pnpm test
+pnpm build
+~~~
+
+## Migração de dados
+
+A configuração cria um banco PostgreSQL novo. Dados que eventualmente estejam no SQLite de uma hospedagem anterior não são copiados automaticamente. Faça uma exportação/importação separada antes de remover qualquer hospedagem ou volume antigo.

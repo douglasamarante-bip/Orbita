@@ -1,3 +1,10 @@
-import type {NextConfig} from 'next';
-const nextConfig:NextConfig={output:'standalone',serverExternalPackages:['node:sqlite'],experimental:{cpus:2}};
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  serverExternalPackages: ['node:sqlite', 'pg', '@supabase/supabase-js'],
+  experimental: {
+    cpus: 2,
+  },
+};
+
 export default nextConfig;
