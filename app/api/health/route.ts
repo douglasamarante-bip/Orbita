@@ -10,7 +10,11 @@ export async function GET() {
       app: 'orbita',
       database: process.env.DATABASE_URL ? 'postgres' : 'sqlite-local',
     });
-  } catch {
+  } catch (error) {
+    const details = error instanceof Error
+      ? { name: error.name, message: error.message }
+      : { message: String(error) };
+    console.error('[orbita:health] database check failed', details);
     return Response.json({ status: 'unavailable' }, { status: 503 });
   }
 }
