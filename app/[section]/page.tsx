@@ -9,6 +9,7 @@ const views: Record<string, string> = {
   aprovacoes: 'approvals',
   clientes: 'clients',
   integracoes: 'integrations',
+  configuracoes: 'settings',
 };
 
 export default async function SectionPage({ params }: { params: Promise<{ section: string }> }) {
