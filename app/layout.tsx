@@ -1,14 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { BRAND } from "@/components/brand";
 
 export const metadata: Metadata = {
-  title: "Órbita — Social Studio",
+  title: `${BRAND.name} — ${BRAND.tagline}`,
   description: "Planeje, aprove e acompanhe sua presença digital.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Órbita",
+    statusBarStyle: "default",
+    title: BRAND.name,
   },
   icons: {
     icon: "/favicon.svg",
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#090909",
+  themeColor: "#F7F5FF",
 };
 
 export default function RootLayout({
@@ -31,6 +32,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

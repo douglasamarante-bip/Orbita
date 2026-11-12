@@ -1,40 +1,40 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | Órbita",
-  description: "Como o Órbita Social Studio trata dados pessoais e informações de contas conectadas.",
+  title: "Política de Privacidade | Postou",
+  description: "Como o Postou Social Studio trata dados pessoais e informações de contas conectadas.",
 };
 
 const pageStyle = {
   minHeight: "100vh",
-  background: "#080908",
-  color: "#f3f4f1",
-  fontFamily: "Arial, sans-serif",
+  background: "#F7F5FF",
+  color: "#1E1B4B",
+  fontFamily: "Inter, Arial, sans-serif",
   lineHeight: 1.7,
   padding: "48px 20px",
 } as const;
 
 const contentStyle = { maxWidth: 820, margin: "0 auto" } as const;
-const headingStyle = { color: "#b9d849" } as const;
+const headingStyle = { color: "#1E1B4B", fontFamily: "'Space Grotesk', Inter, Arial, sans-serif" } as const;
 
 export default function PrivacyPage() {
   return (
     <main style={pageStyle}>
       <article style={contentStyle}>
-        <a href="/" style={{ color: "#b9d849", textDecoration: "none" }}>Órbita Social Studio</a>
+        <a href="/" style={{ color: "#5B3DF5", textDecoration: "none" }}>Postou Social Studio</a>
         <h1 style={{ ...headingStyle, fontSize: 36, lineHeight: 1.2, marginTop: 28 }}>Política de Privacidade</h1>
         <p>Atualizada em 26 de setembro de 2026.</p>
         <p>
-          Esta política explica como o Órbita Social Studio trata informações quando você usa
+          Esta política explica como o Postou Social Studio trata informações quando você usa
           a plataforma, administra uma marca, aprova publicações ou conecta uma conta profissional
           do Instagram ou uma Página do Facebook.
         </p>
 
         <h2 style={headingStyle}>1. Quem administra os dados</h2>
         <p>
-          O Órbita Social Studio é administrado por sua equipe responsável. Para dúvidas,
+          O Postou Social Studio é administrado por sua equipe responsável. Para dúvidas,
           solicitações sobre dados pessoais ou pedidos de exclusão, escreva para{" "}
-          <a href="mailto:amarantedouglas94@gmail.com" style={{ color: "#b9d849" }}>
+          <a href="mailto:amarantedouglas94@gmail.com" style={{ color: "#5B3DF5" }}>
             amarantedouglas94@gmail.com
           </a>.
         </p>
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Ao conectar uma conta, você autoriza as permissões apresentadas pela Meta para os
-          recursos escolhidos. O Órbita não solicita sua senha do Instagram ou do Facebook.
+          recursos escolhidos. O Postou não solicita sua senha do Instagram ou do Facebook.
         </p>
 
         <h2 style={headingStyle}>3. Como usamos os dados</h2>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           Nos termos da legislação aplicável, você pode solicitar confirmação de tratamento,
           acesso, correção, informação sobre compartilhamento e exclusão de dados pessoais.
           Para desconectar uma conta, use também as opções disponibilizadas pela Meta. Para pedir
-          a exclusão dos dados mantidos pelo Órbita, envie um e-mail identificando sua conta e a
+          a exclusão dos dados mantidos pelo Postou, envie um e-mail identificando sua conta e a
           marca relacionada.
         </p>
 
@@ -91,7 +91,7 @@ export default function PrivacyPage() {
           disponível nesta página.
         </p>
         <p style={{ marginTop: 40 }}>
-          <a href="/" style={{ color: "#b9d849" }}>Voltar ao Órbita</a>
+          <a href="/" style={{ color: "#5B3DF5" }}>Voltar ao Postou</a>
         </p>
       </article>
     </main>
