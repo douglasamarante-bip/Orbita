@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Órbita — Social Studio",
+  title: "Postou — Social Studio",
   description: "Planeje, aprove e acompanhe sua presença digital.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Órbita",
+    title: "Postou",
   },
   icons: {
     icon: "/favicon.svg",
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#090909",
+  themeColor: "#F7F5FF",
 };
 
 export default function RootLayout({
