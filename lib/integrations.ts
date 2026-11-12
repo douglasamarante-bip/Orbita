@@ -1,6 +1,6 @@
 import {db,config,crypt,fail,uid} from './server';
 import {hasSupabaseStorage,supabaseStorage} from './storage';
-export const origin=()=>config().APP_ORIGIN||'http://localhost:3000';
+export const origin=()=>config().APP_ORIGIN||config().URL||config().DEPLOY_PRIME_URL||config().SITE_URL||'http://localhost:3000';
 export const graphVersion=()=>config().META_GRAPH_VERSION||'v25.0';
 export async function jsonFetch(url:string,init?:RequestInit){const r=await fetch(url,{...init,signal:AbortSignal.timeout(25000)});const d:any=await r.json();if(!r.ok||d.error)throw Object.assign(new Error(d.error?.message||d.error_description||'O provedor não concluiu a solicitação.'),{status:502});return d}
 export async function graph(path:string,token:string,params:Record<string,string>={},method='GET'){const url='https://graph.facebook.com/'+graphVersion()+'/'+path;return jsonFetch(method==='GET'?url+'?'+new URLSearchParams(params):url,{method,headers:{Authorization:'Bearer '+token,...(method==='POST'?{'Content-Type':'application/x-www-form-urlencoded'}:{})},...(method==='POST'?{body:new URLSearchParams(params)}:{})})}
