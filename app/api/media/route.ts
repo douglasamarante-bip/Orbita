@@ -63,9 +63,14 @@ export const POST = respond(async req => {
       const result = await supabaseStorage().info(id);
       if (result.error || !result.data) fail('O arquivo ainda não chegou ao Storage. Tente novamente.', 409);
 
-      if (Number(result.data.size) !== size || result.data.mimetype !== type) {
+      // Storage info() returns FileObjectV2 with camel-cased contentType,
+      // while older responses may expose values inside metadata.
+      const actualSize = result.data.size ?? result.data.metadata?.size ?? result.data.metadata?.contentLength;
+      const actualType = result.data.contentType ?? result.data.metadata?.mimetype ?? result.data.metadata?.contentType;
+      if ((actualSize != null && Number(actualSize) !== size) ||
+          (actualType != null && String(actualType).toLowerCase() !== type.toLowerCase())) {
         await supabaseStorage().remove([id]);
-        fail('O arquivo enviado não corresponde aos dados informados.', 409);
+        fail('O arquivo enviado não corresponde aos dados informados. Confira o tamanho e o formato do arquivo.', 409);
       }
 
       await db().prepare('INSERT INTO assets(id,brand_id,name,type,size,share_key) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING')
