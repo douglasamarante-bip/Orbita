@@ -5,7 +5,7 @@ export const config = {
 export default async function handler() {
   if (process.env.SCHEDULER_ENABLED !== 'true') return;
 
-  const origin = (process.env.APP_ORIGIN || '').replace(/\/+$/, '');
+  const origin = (process.env.APP_ORIGIN || process.env.URL || process.env.DEPLOY_PRIME_URL || process.env.SITE_URL || '').replace(/\/+$/, '');
   const secret = process.env.SCHEDULER_SECRET;
   if (!origin || !secret) {
     throw new Error('Configure APP_ORIGIN e SCHEDULER_SECRET para ativar o agendador.');
