@@ -47,6 +47,7 @@ export const POST = respond(async req => {
         direct: true,
         id,
         token: result.data.token,
+        signedUrl: result.data.signedUrl,
         endpoint: resumableEndpoint(),
       });
     }
