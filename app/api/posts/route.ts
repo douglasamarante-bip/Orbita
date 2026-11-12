@@ -47,8 +47,14 @@ export const PATCH=respond(async req=>{
     if(status!=='review')fail('A publicação não está aguardando aprovação.',409);
     status='approved';label=a.isOwner?'Aprovado pela agência':'Aprovado pelo cliente';
     if(typeof v.comment==='string'&&v.comment.trim())comment=v.comment.trim().slice(0,1000);
-    if(!a.isOwner&&await canSchedule()){
-      status='scheduled';label='Aprovado pelo cliente e programado';
+    if(!a.isOwner){
+      if(p.poll_question)fail('Esta publicação contém uma enquete do Story, que precisa ser finalizada manualmente no Instagram. Remova a enquete para usar a publicação automática.',409);
+      if(config().SCHEDULER_ENABLED!=='true')fail('A publicação não pode ser aprovada ainda: o agendador automático não está ativado. Avise a agência para configurar SCHEDULER_ENABLED.',503);
+      if(p.format!=='text'&&config().MEDIA_DELIVERY_ENABLED!=='true')fail('A publicação não pode ser aprovada ainda: a entrega de mídias para a Meta não está ativada. Avise a agência para configurar MEDIA_DELIVERY_ENABLED.',503);
+      if(new Date(p.scheduled_at).getTime()<=Date.now())fail('O horário programado já passou. Peça à agência para atualizar a data antes de aprovar.',409);
+      if(p.format!=='text'&&JSON.parse(p.media).length===0)fail('Esta publicação não possui mídia. Peça à agência para adicionar o arquivo antes de aprovar.',409);
+      if(!(await publishingConnection()))fail('A conta do Instagram desta marca não está conectada. Conecte a conta antes de aprovar.',409);
+      status='scheduled';label='Aprovado pelo cliente e programado automaticamente';
     }
   }else if(v.action==='reject'){
     if(status!=='review')fail('A publicação não está aguardando aprovação.',409);
