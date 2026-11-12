@@ -115,6 +115,12 @@ CREATE TABLE IF NOT EXISTS auth_limits (
   until BIGINT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS integration_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS scheduler_locks (
   id INTEGER PRIMARY KEY,
   token TEXT NOT NULL,
@@ -133,6 +139,7 @@ ALTER TABLE public.sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.auth_limits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scheduler_locks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.integration_settings ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE
   public.users,
@@ -145,7 +152,8 @@ REVOKE ALL ON TABLE
   public.sessions,
   public.invitations,
   public.auth_limits,
-  public.scheduler_locks
+  public.scheduler_locks,
+  public.integration_settings
 FROM anon, authenticated;
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
