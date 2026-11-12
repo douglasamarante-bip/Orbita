@@ -26,7 +26,7 @@ export const POST=respond(async req=>{
   const current=await metaCredentials();
   const appId=String(value.appId||'').trim()||current.appId;
   const appSecret=String(value.appSecret||'').trim()||current.appSecret;
-  if(!/^\\d{5,30}$/.test(appId))fail('Informe um Meta App ID válido.');
+  if(!/^\d{5,30}$/.test(appId))fail('Informe um Meta App ID válido.');
   if(appSecret.length<16||appSecret.length>256)fail('Informe um Meta App Secret válido.');
   const now=new Date().toISOString();
   await db().prepare('INSERT INTO integration_settings(key,value,updated) VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated=excluded.updated').bind('META_APP_ID',await crypt(appId),now).run();
